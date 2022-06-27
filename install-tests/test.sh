@@ -9,6 +9,10 @@ LLVM_VERSIONS=(8 9 10)
 # the distro names must match to the name of a docker image!
 DISTROS=("debian:stretch" "debian:buster" "debian:bullseye" "debian:testing" "debian:unstable" "ubuntu:16.04" "ubuntu:18.04" "ubuntu:18.10" "ubuntu:19.04")
 
+# get script directory so that this script can run from anywhere
+SCRIPT_DIR=`dirname \`realpath $0\``
+pushd ${SCRIPT_DIR} > /dev/null
+
 # file containing the test suite
 TEST_SUITE=tests.bats
 if [ -f $TEST_SUITE ] ; then
@@ -19,7 +23,7 @@ fi
 echo "load test_helper" >> $TEST_SUITE
 echo "" >> $TEST_SUITE
 
-# generate the test suite for the product of DISTROS x LLVM_VERSIONS 
+# generate the test suite for the product of DISTROS x LLVM_VERSIONS
 for distro in "${DISTROS[@]}"
 do
   for llvm_version in "${LLVM_VERSIONS[@]}"
@@ -37,6 +41,16 @@ if [ -f $LOG_FILE ] ; then
   rm -r $LOG_FILE
 fi
 
+# init pull git submodule if not done yet
+if [[ ! -f bats/bin/bats ]]; then
+    git submodule update --init
+fi
 
 # run the test suite
 bats/bin/bats $TEST_SUITE | tee $LOG_FILE
+
+# display the results with grep
+cat $LOG_FILE | grep " - llvm "
+
+# restore current directory
+popd > /dev/null
