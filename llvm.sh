@@ -21,7 +21,7 @@ usage() {
 }
 
 CURRENT_LLVM_STABLE=14
-BASE_URL="http://apt.llvm.org"
+BASE_URL="https://apt.llvm.org"
 
 # Check for required tools
 needed_binaries=(lsb_release wget add-apt-repository gpg)
@@ -45,6 +45,7 @@ DISTRO=$(lsb_release -is)
 VERSION=$(lsb_release -sr)
 UBUNTU_CODENAME=""
 CODENAME_FROM_ARGUMENTS=""
+ID_LIKE=""
 
 # read optional command line arguments
 # todo: this could be in the argument parsing loop
@@ -121,25 +122,29 @@ case ${DISTRO,,} in
         # ubuntu and its derivatives
         if [[ -n "${UBUNTU_CODENAME}" ]]; then
             CODENAME=${UBUNTU_CODENAME}
-            LINKNAME=-${UBUNTU_CODENAME}
             break
         fi
         # generic "debian" derivative, fallthrough
-        ;&
+        ;;&
     debian)
         if [[ "${TARGET_VERSION}" == "unstable" ]] || [[ "${TARGET_VERSION}" == "testing" ]]; then
             CODENAME=unstable
-            LINKNAME=
         else
             # "stable" Debian release
             CODENAME=${VERSION_CODENAME}
-            LINKNAME=-${CODENAME}
         fi
         ;;
 esac
 
 # join the repository name
 if [[ -n "${CODENAME}" ]]; then
+
+    LINKNAME=-${CODENAME}
+    if [[ "${CODENAME}" == "unstable" ]]; then
+        # LLVM unstable package don't have "unstable" in the link name
+        LINKNAME=
+    fi
+
     REPO_NAME="deb ${BASE_URL}/${CODENAME}/  llvm-toolchain${LINKNAME}${LLVM_VERSION_STRING} main"
 
     # check if the repository exists for the distro and version
@@ -157,7 +162,7 @@ fi
 # install everything
 if [[ -z "`apt-key list | grep -i llvm`" ]]; then
     # download GPG key once
-    wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
+    wget -O - ${BASE_URL}/llvm-snapshot.gpg.key | apt-key add -
 fi
 add-apt-repository "${REPO_NAME}"
 apt-get update
