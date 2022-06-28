@@ -45,32 +45,9 @@ DISTRO=$(lsb_release -is)
 VERSION=$(lsb_release -sr)
 UBUNTU_CODENAME=""
 CODENAME_FROM_ARGUMENTS=""
-# Obtain VERSION_CODENAME and UBUNTU_CODENAME (for Ubuntu and its derivatives)
-source /etc/os-release
-DISTRO=${DISTRO,,}
-case ${DISTRO} in
-    debian)
-        if [[ "${VERSION}" == "unstable" ]] || [[ "${VERSION}" == "testing" ]]; then
-            CODENAME=unstable
-            LINKNAME=
-        else
-            # "stable" Debian release
-            CODENAME=${VERSION_CODENAME}
-            LINKNAME=-${CODENAME}
-        fi
-        ;;
-    *)
-        # ubuntu and its derivatives
-        if [[ -n "${UBUNTU_CODENAME}" ]]; then
-            CODENAME=${UBUNTU_CODENAME}
-            if [[ -n "${CODENAME}" ]]; then
-                LINKNAME=-${CODENAME}
-            fi
-        fi
-        ;;
-esac
 
 # read optional command line arguments
+# todo: this could be in the argument parsing loop
 if [ "$#" -ge 1 ] && [ "${1::1}" != "-" ]; then
     if [ "$1" != "all" ]; then
         LLVM_VERSION=$1
@@ -88,6 +65,8 @@ if [ "$#" -ge 1 ] && [ "${1::1}" != "-" ]; then
     fi
 fi
 
+# fixme: fix the argument detection for ${OPTARG}, if a user follows the usage instructions blindly,
+#        -n=<codename> will appear as "=<codename>"
 while getopts ":hm:n:" arg; do
     case $arg in
     h)
@@ -97,9 +76,7 @@ while getopts ":hm:n:" arg; do
         BASE_URL=${OPTARG}
         ;;
     n)
-        CODENAME=${OPTARG}
-        LINKNAME=-${CODENAME}
-        CODENAME_FROM_ARGUMENTS="true"
+        CODENAME_FROM_ARGUMENTS=${OPTARG}
         ;;
     esac
 done
@@ -125,6 +102,42 @@ fi
 
 LLVM_VERSION_STRING=${LLVM_VERSION_PATTERNS[$LLVM_VERSION]}
 
+# Obtain VERSION_CODENAME and UBUNTU_CODENAME (for Ubuntu and its derivatives)
+source /etc/os-release
+TARGET_VERSION=${VERSION}
+if [[ -n "${CODENAME_FROM_ARGUMENTS}" ]]; then
+    TARGET_VERSION=${CODENAME_FROM_ARGUMENTS}
+    VERSION_CODENAME=${CODENAME_FROM_ARGUMENTS}
+    UBUNTU_CODENAME=${UBUNTU_CODENAME}
+    # Depends if we want to allow ubuntu to use "testing" or "unstable", else remove this overwrite.
+    UBUNTU_CODENAME=""
+fi
+
+case ${DISTRO,,} in
+    *)
+        # APT only supports debian/ubuntu derivatives
+        [[ -n "`echo ${ID_LIKE} | grep debian`" ]] || [[ -n "`echo ${ID_LIKE} | grep ubuntu`" ]] || break
+
+        # ubuntu and its derivatives
+        if [[ -n "${UBUNTU_CODENAME}" ]]; then
+            CODENAME=${UBUNTU_CODENAME}
+            LINKNAME=-${UBUNTU_CODENAME}
+            break
+        fi
+        # generic "debian" derivative, fallthrough
+        ;&
+    debian)
+        if [[ "${TARGET_VERSION}" == "unstable" ]] || [[ "${TARGET_VERSION}" == "testing" ]]; then
+            CODENAME=unstable
+            LINKNAME=
+        else
+            # "stable" Debian release
+            CODENAME=${VERSION_CODENAME}
+            LINKNAME=-${CODENAME}
+        fi
+        ;;
+esac
+
 # join the repository name
 if [[ -n "${CODENAME}" ]]; then
     REPO_NAME="deb ${BASE_URL}/${CODENAME}/  llvm-toolchain${LINKNAME}${LLVM_VERSION_STRING} main"
@@ -132,7 +145,7 @@ if [[ -n "${CODENAME}" ]]; then
     # check if the repository exists for the distro and version
     if ! wget -q --method=HEAD ${BASE_URL}/${CODENAME} &> /dev/null; then
         if [[ -n "${CODENAME_FROM_ARGUMENTS}" ]]; then
-            echo "Specified codename '${CODENAME}' is not supported by this script."
+            echo "Specified codename '${CODENAME_FROM_ARGUMENTS}' is not supported by this script."
         else
             echo "Distribution '${DISTRO}' in version '${VERSION}' is not supported by this script."
         fi
