@@ -1,3 +1,10 @@
+[![Issue Tracker](https://img.shields.io/github/issues/llvm/llvm-project/packaging?label=Issues)](https://github.com/llvm/llvm-project/labels/packaging)
+[![License](https://img.shields.io/badge/Licence-Apache%202.0-blue.svg)](./LICENSE.TXT)
+
+[//]: <> (The license contains the word "with LLVM exceptions" cannot be recognized by shields.io)
+
+# The LLVM Jenkins Build for Debian
+
 This page stores the various jenkins job configuration and helpers to build:
 http://llvm-jenkins.debian.net/
 
@@ -5,10 +12,12 @@ The infrastructure is described:
 
 https://blog.llvm.org/posts/2021-11-02-apt.llvm.org-moving-from-physical-server-to-the-cloud/
 
-## Reporting bugs
+## Contributing
 
-Bugs should be reported on the <a href="https://github.com/llvm/llvm-project/labels/packaging">LLVM bug tracker</a> (label: packaging).
+Please refer to the [CONTRIBUTING.md](./CONTRIBUTING.md) file for bug reporting and contribution guidelines.
 
-## llvm.sh - installation script
+Contributors should adhere to the project's [code of conduct](./CODE_OF_CONDUCT.md).
 
-If you have any changes to the llvm.sh script, please run the [installation tests](install-tests/README.md) before submitting.
+## Getting in touch
+
+Join [LLVM Discourse forums](https://discourse.llvm.org/), [discord chat](https://discord.gg/xS7Z362) or #llvm IRC channel on [OFTC](https://oftc.net/).
