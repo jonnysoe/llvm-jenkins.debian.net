@@ -1,5 +1,6 @@
 [![Issue Tracker](https://img.shields.io/github/issues/llvm/llvm-project/packaging?label=Issues)](https://github.com/llvm/llvm-project/labels/packaging)
 [![License](https://img.shields.io/badge/Licence-Apache%202.0-blue.svg)](./LICENSE.TXT)
+[![Discord](https://img.shields.io/badge/discord-join-7289DA.svg?logo=discord&longCache=true&style=flat)](https://discord.gg/xS7Z362)
 
 [//]: <> (The license contains the word "with LLVM exceptions" cannot be recognized by shields.io)
 
